@@ -1,0 +1,66 @@
+name: "Build Image and Run Command"
+description: "Build an image and run the given command"
+inputs:
+  target:
+    description: "Sets the target stage to build"
+    required: true
+  run:
+    description: "Run command in container"
+    required: true
+  options:
+    description: "Options"
+    required: false
+  cache-to:
+    description: "List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)"
+    required: false
+  secrets:
+    description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Repo metadata
+      id: repo
+      uses: actions/github-script@v6.4.1
+      with:
+        script: |
+          const repo = await github.rest.repos.get(context.repo)
+          return repo.data
+
+    - name: Prepare
+      id: prep
+      shell: bash
+      run: |
+        echo "docker-image=ghcr.io/${{ github.event.repository.full_name }}" >> $GITHUB_OUTPUT
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v2.9.1
+
+    - name: Build image
+      id: docker-build
+      uses: docker/build-push-action@v4.1.1
+      with:
+        builder: ${{ steps.buildx.outputs.name }}
+        context: .
+        tags: |
+          ${{ steps.prep.outputs.docker-image }}:${{ github.sha }}-${{ inputs.target }}
+        labels: |
+          org.opencontainers.image.title=${{ fromJson(steps.repo.outputs.result).name }}
+          org.opencontainers.image.description=${{ fromJson(steps.repo.outputs.result).description }}
+          org.opencontainers.image.url=${{ fromJson(steps.repo.outputs.result).html_url }}
+          org.opencontainers.image.source=${{ fromJson(steps.repo.outputs.result).clone_url }}
+          org.opencontainers.image.revision=${{ github.sha }}
+        cache-from: type=gha
+        cache-to: ${{ inputs.cache-to }}
+        target: ${{ inputs.target }}
+        load: true
+        secrets: ${{ inputs.secrets }}
+
+    - name: Run command
+      uses: addnab/docker-run-action@v3
+      with:
+          image: ${{ steps.prep.outputs.docker-image }}:${{ github.sha }}-${{ inputs.target }}
+          run: ${{ inputs.run }}
+          options: ${{ inputs.options }}
