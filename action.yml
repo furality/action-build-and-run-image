@@ -6,7 +6,7 @@ inputs:
     required: true
   run:
     description: "Run command in container"
-    required: true
+    required: false
   options:
     description: "Options"
     required: false
@@ -44,8 +44,6 @@ runs:
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: .
-        tags: |
-          ${{ steps.prep.outputs.docker-image }}:${{ github.sha }}-${{ inputs.target }}
         labels: |
           org.opencontainers.image.title=${{ fromJson(steps.repo.outputs.result).name }}
           org.opencontainers.image.description=${{ fromJson(steps.repo.outputs.result).description }}
@@ -55,12 +53,13 @@ runs:
         cache-from: type=gha
         cache-to: ${{ inputs.cache-to }}
         target: ${{ inputs.target }}
-        load: true
+        load: ${{ !inputs.run }}
         secrets: ${{ inputs.secrets }}
 
     - name: Run command
+      if: ${{ inputs.run }}
       uses: addnab/docker-run-action@v3
       with:
-          image: ${{ steps.prep.outputs.docker-image }}:${{ github.sha }}-${{ inputs.target }}
+          image: ${{ steps.prep.outputs.docker-image }}:@${{ steps.docker-build.outputs.digest }}
           run: ${{ inputs.run }}
           options: ${{ inputs.options }}
