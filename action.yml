@@ -53,7 +53,7 @@ runs:
         cache-from: type=gha
         cache-to: ${{ inputs.cache-to }}
         target: ${{ inputs.target }}
-        load: ${{ !inputs.run }}
+        load: ${{ !!inputs.run }}
         secrets: ${{ inputs.secrets }}
 
     - name: Run command
