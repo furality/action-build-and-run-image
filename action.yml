@@ -57,7 +57,7 @@ runs:
         target: ${{ inputs.target }}
         load: ${{ !!inputs.run }}
         secrets: ${{ inputs.secrets }}
-        buildkitd-config-inline: ${{ input.buildkitd-config-inline }}
+        buildkitd-config-inline: ${{ inputs.buildkitd-config-inline }}
 
     - name: Run command
       if: ${{ inputs.run }}
