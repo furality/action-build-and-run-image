@@ -16,7 +16,9 @@ inputs:
   secrets:
     description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
     required: false
-
+  buildkitd-config-inline:
+    description: "Same as buildkitd-config but inline"
+    required: false
 runs:
   using: "composite"
   steps:
@@ -55,11 +57,12 @@ runs:
         target: ${{ inputs.target }}
         load: ${{ !!inputs.run }}
         secrets: ${{ inputs.secrets }}
+        buildkitd-config-inline: ${{ input.buildkitd-config-inline }}
 
     - name: Run command
       if: ${{ inputs.run }}
       uses: addnab/docker-run-action@v3
       with:
-          image: ${{ steps.prep.outputs.docker-image }}:@${{ steps.docker-build.outputs.digest }}
-          run: ${{ inputs.run }}
-          options: ${{ inputs.options }}
+        image: ${{ steps.prep.outputs.docker-image }}:@${{ steps.docker-build.outputs.digest }}
+        run: ${{ inputs.run }}
+        options: ${{ inputs.options }}
