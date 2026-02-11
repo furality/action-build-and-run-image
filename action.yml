@@ -24,7 +24,7 @@ runs:
   steps:
     - name: Repo metadata
       id: repo
-      uses: actions/github-script@v7.0.1
+      uses: actions/github-script@v8.0.0
       with:
         script: |
           const repo = await github.rest.repos.get(context.repo)
@@ -38,13 +38,13 @@ runs:
 
     - name: Set up Docker Buildx
       id: buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: docker/setup-buildx-action@v3.12.0
       with:
         buildkitd-config-inline: ${{ inputs.buildkitd-config-inline }}
 
     - name: Build image
       id: docker-build
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v6.19.0
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: .
